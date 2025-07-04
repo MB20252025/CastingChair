@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modeling Audition Interactive Experience</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6e6e6;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .game-container {
+            background-color: rgba(10, 15, 30, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 800px;
+            min-height: 600px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #4a4a8a;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #4a4a8a;
+        }
+        
+        .header h1 {
+            color: #ff6b9c;
+            font-size: 28px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(255, 107, 156, 0.4);
+        }
+        
+        .header p {
+            color: #a0a0c0;
+            font-size: 16px;
+        }
+        
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(20, 25, 45, 0.6);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #3a3a6a;
+            min-height: 400px;
+            position: relative;
+        }
+        
+        .message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 85%;
+            animation: fadeIn 0.4s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            animation-fill-mode: forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .dover {
+            align-self: flex-start;
+            background: linear-gradient(135deg, #2d2d5a 0%, #3a3a6a 100%);
+            border: 1px solid #5a5a9a;
+            color: #e6e6ff;
+        }
+        
+        .her {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #5a2d5a 0%, #7a3a7a 100%);
+            border: 1px solid #9a5a9a;
+            color: #ffe6ff;
+        }
+        
+        .narrative {
+            align-self: center;
+            background: rgba(40, 40, 70, 0.7);
+            border: 1px dashed #6a6aaa;
+            font-style: italic;
+            color: #c0c0ff;
+            max-width: 95%;
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .task {
+            background: linear-gradient(135deg, #3a2d5a 0%, #4a3a7a 100%);
+            border: 1px solid #7a5a9a;
+            color: #e6d6ff;
+            position: relative;
+            padding: 15px 15px 15px 50px;
+        }
+        
+        .task::before {
+            content: "⚡";
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            font-size: 24px;
+        }
+        
+        .question {
+            background: linear-gradient(135deg, #5a3a2d 0%, #7a4a3a 100%);
+            border: 1px solid #9a7a5a;
+            color: #ffe6d6;
+        }
+        
+        .popup {
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            text-align: center;
+            margin: 10px auto;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 90%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+        
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .choice-btn {
+            background: linear-gradient(135deg, #4a3a7a 0%, #5a4a9a 100%);
+            color: #e6e6ff;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            border: 1px solid #7a6aaa;
+        }
+        
+        .choice-btn:hover {
+            background: linear-gradient(135deg, #5a4a9a 0%, #6a5aaa 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .choice-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .continue-btn {
+            background: linear-gradient(135deg, #ff6b9c 0%, #ff4d8d 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(255, 107, 156, 0.3);
+            align-self: center;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .continue-btn:hover {
+            background: linear-gradient(135deg, #ff4d8d 0%, #ff2d7d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 107, 156, 0.4);
+        }
+        
+        .continue-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(90, 90, 150, 0.3);
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b9c 0%, #ff4d8d 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .email {
+            background: rgba(30, 30, 60, 0.7);
+            border: 1px solid #5a5a9a;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: monospace;
+            line-height: 1.6;
+            margin: 15px 0;
+            white-space: pre-wrap;
+        }
+        
+        .character {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            font-size: 18px;
+        }
+        
+        .dover-name {
+            color: #6b9cff;
+        }
+        
+        .her-name {
+            color: #ff9c6b;
+        }
+        
+        .prep-list {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        
+        .prep-list li {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 20px;
+            width: fit-content;
+            margin: 5px 0;
+            align-self: flex-start;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #a0a0c0;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        
+        .self-thought {
+            background: linear-gradient(135deg, #3a5a2d 0%, #4a7a3a 100%);
+            border: 1px solid #5a9a5a;
+            color: #e6ffd6;
+            font-style: italic;
+        }
+        
+        .notification {
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px auto;
+            max-width: 90%;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(135deg, #4a3a7a 0%, #5a4a9a 100%);
+            color: #e6e6ff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #7a6aaa;
+        }
+        
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #5a4a9a 0%, #6a5aaa 100%);
+            transform: translateY(-2px);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .choice-btn, .continue-btn, .nav-btn {
+                padding: 12px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Modeling Audition Experience</h1>
+            <p>Play as Candice in this interactive story</p>
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+        </div>
+        
+        <div class="content-area" id="content">
+            <!-- Content will be dynamically generated here -->
+        </div>
+        
+        <div id="choices-container" class="choices"></div>
+        
+        <div class="nav-buttons">
+            <button id="back-btn" class="nav-btn">Back</button>
+            <button id="continue-btn" class="continue-btn">Continue</button>
+            <button id="next-btn" class="nav-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            currentStep: 0,
+            steps: [],
+            progress: 0,
+            timeoutId: null
+        };
+        
+        // Game steps
+        const gameSteps = [
+            {
+                type: "narrative",
+                content: "You received an email from CastingCouch.ltd:"
+            },
+            {
+                type: "email",
+                content: `Hi,
+
+Thanks for your interest in CastingCouch.ltd. We would love to arrange a meeting with yourself and discuss if we can help you or not.
+
+Interview time: 1hr from now
+Location: Dovers Office.
+
+Looking forward to seeing you
+
+Cheers
+Dover`
+            },
+            {
+                type: "narrative",
+                content: "Narrative: You will audition for an adult modeling agency. You will attend a meeting and depending if he likes you or how well you do, it'll decide if you are accepted into the agency or get a job."
+            },
+            {
+                type: "task",
+                content: "Task: You need to get ready! Today's the day where you finally get your chance!"
+            },
+            {
+                type: "task",
+                content: "Task: Do your research while applying your make-up! Take in as many tips or tricks that could help prepare you for a successful audition."
+            },
+            {
+                type: "prep",
+                content: `
+• Put on Makeup: Apply a natural yet enhancing makeup look, focusing on eyes and lips to highlight your features.
+• Do Hair: Style your hair in a way that makes you feel confident and alluring, perhaps with loose curls or a sleek ponytail.
+• Spare Underwear: Pack a spare set of underwear, just in case, ensuring it's something comfortable and discreet.
+• Perfume: Apply a light, sensual perfume that will make a lasting impression without being overpowering.
+• Choose Outfit: Select an outfit that is both professional and slightly revealing, such as a tight-fitting dress or a blouse with a low neckline.
+• Accessories: Add a few tasteful accessories like a necklace or earrings to elevate your look.`
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Will they make me shower when I get there? Should I shave completely or leave a little strip?",
+                choices: [
+                    { text: "A) Shave completely", popup: "Nice and clean, easier to show off pussy" },
+                    { text: "B) A Strip", popup: "A sexy landing strip might impress him" }
+                ]
+            },
+            {
+                type: "task",
+                content: "Task: Recall a time where you was fucked like a whore. Remember how it felt and use that feeling to prepare for your interview. Today could be the day I live out my fantasy!"
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Are you ready for what's about to happen today?",
+                choices: [
+                    { text: "A) \"I really need this!\"", popup: "You was born to be a star, just doing as your told." },
+                    { text: "B) \"No, I'm so nervous\"", popup: "Breathe in slowly. You act shy and because all the time! This is a chance to prove to yourself your so much more!" }
+                ]
+            },
+            {
+                type: "narrative",
+                content: "Your now prepared. Go to the meeting and put on your biggest smile. You walk into reception and head towards his office. The receptionist knows exactly why I'm here and what your going to do. Does she do this too? You still feel so nervous, but confident you can get through job done."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Come in"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Hi"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Hi, I'm Dover. Take a seat. Relax."
+            },
+            {
+                type: "task",
+                content: "Task: When sitting down, make sure your dress or skirt rides up high so you can flash a bit of leg. Bite you lip if he notices."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Thanks, how are you?"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "I'm great thank you, and you?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Good thank you"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "You look great! Blonde hair, Beautiful green eyes!"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Thanks, I've been told they're my best feature."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Really...And what's your 2nd best feature?"
+            },
+            {
+                type: "task",
+                content: "Task: Answer this question while subtly crossing your legs"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "How old are you?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "29"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "How tall are you?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "5'5\""
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Tell me a bit about yourself?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "I'm quite quiet, can seem shy, but..."
+            },
+            {
+                type: "task",
+                content: "Task: Answer this question while maintaining eye contact"
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Am I maintaining good eye contact with Dover??",
+                choices: [
+                    { text: "A) Yes", popup: "Good girl, your doing great!" },
+                    { text: "B) No", popup: "He needs to remember you, try harder!" }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Ok, and your here today to be an adult model?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "What makes you want to do that?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "It's sounds like fun"
+            },
+            {
+                type: "task",
+                content: "Task: He's staring at my lips like he's imagining them wrapped around his cock. Lick your lips, imagine the taste."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "That's it? Is it money or fame or you want to become a model?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "It's easy money and it sounds like fun. It doesn't take a lot of time."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "I mean I like to do it anyway, so I might as well get paid for it."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Sure"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "And when you like to say you like to do it anyway, what do you mean?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Having sex at home, nothing professional."
+            },
+            {
+                type: "question",
+                content: "Question to yourself: How do you think your coming across?",
+                choices: [
+                    { text: "A) \"I think he likes what I'm saying\"", popup: "He does, he can't take his eyes off you" },
+                    { text: "B) \"Not sure, maybe I need to be sluttier?\"", popup: "You should always be sluttier" }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "What I do is get models jobs, girls like you. I get them jobs that pay £1000 to £5000 a day."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "I'm making a video right now, do you see the cameras?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes I do."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "This video, I will send to producers across the world, and if they like you, they're going to hire you!"
+            },
+            {
+                type: "task",
+                content: "Task: Act nervous. You've never been filmed before. Who knows who's going to see this!"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "And they'll pay you that amount of money"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "That sounds nice"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "So in 3 years, how many people do you think you've slept with?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "About 4 people"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Really? Is that the real number?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes, only 4"
+            },
+            {
+                type: "task",
+                content: "Task: Tell him your a liar. The real number is 2. You lied as you wanted to come across a lot more experienced."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "And were they all boyfriends?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yeah, all boyfriends, pretty much"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Have you ever had a 1 night stand?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "I've got a friend with benefits right now"
+            },
+            {
+                type: "task",
+                content: "Task: Act guilty. You have a boyfriend who thinks your at work right now."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Yeah, that's cool."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Does he know your here, or does anyone know your here today?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "No, no one knows I'm here"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "What do you think they'd say, if they found out?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Ummm, I know my friends wouldn't be too upset. They'd be like go Candice, go Candice!"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "But everyone else?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Hmmm let's hope they don't find out"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Why do you want to get into this then? Is it the money, sex...or is it a little bit of both?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "A little bit of both..."
+            },
+            {
+                type: "task",
+                content: "Task: Answer this question while shifting in your seat"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "What are your sexual preferences?"
+            },
+            {
+                type: "task",
+                content: "Task: Tell Dover your sexual preferences (Likes/Dislikes, desires, kinks, fantasies etc.) Ride the edge of your chair, rolling your hips slightly when describing your sexual preferences to him."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Take your shoes and socks off please"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Sure"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Stand just there for me. Alright, now turn around for me...face me again."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "OK"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Beautiful, just beautiful! Now for this part, I want you to turn around and face the wall. Bend over at the waist real far. And then reach back, and slowly take down your panties."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Gorgeous. Now take them all the way down and take them off. Now spread your legs just a little wider, face your ass towards me, reach back and spread those cheeks."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "And hold that for me please"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Wider please."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Ok"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Look back at me"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Feeling vulnerable?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "A little. A little exposed."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Right, go ahead and take a seat."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Do you masturbate?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yeah, a lot of the times"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "How many times is a lot?"
+            },
+            {
+                type: "question",
+                content: "Question to yourself: How many times do you masturbate a week?",
+                choices: [
+                    { text: "A) \"5 or 6 times a week\"", popup: "He smiles at you, and calls you a \"good girl\"" },
+                    { text: "B) \"once or twice a day, every day\"", popup: "He smiles at you, and says \"Your high sex drive is perfect for this industry\"" }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Do you use your hand or a toy?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "My hand mainly. A toy for when I want that spot to be hit hard."
+            },
+            {
+                type: "self-thought",
+                content: "Self Thought: OMG!! He's going to ask me to masturbate...I just know it!"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Bring your knees up on the couch. And now open your legs for me."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "I want you to play with your pussy with your hand and moan for me."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Umm Ok"
+            },
+            {
+                type: "task",
+                content: "Task: Feeling shy you start of slow. But you notice how he can't take his eyes off you and that dripping wet pussy. Impress him! Moan louder"
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Am I enjoying this experience?",
+                choices: [
+                    { text: "A) \"Yes, I'm having a good time.\"", popup: "That's great! Let your enjoyment show." },
+                    { text: "B) \"No, I'm feeling a bit uncomfortable.\"", popup: "It's okay to feel uncomfortable. Remember, you're here to learn and explore." }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Now, I want you to use this toy"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Umm, sure."
+            },
+            {
+                type: "self-thought",
+                content: "Self thought: I'm wet already! Can he tell? Can he smell it?"
+            },
+            {
+                type: "task",
+                content: "Task: Use the vibrator he provides on your clit, get close to orgasm, but stop abruptly and beg: 'Please.. can I cum?'"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "No you can't cum! Control yourself. You have a gorgeous pussy"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Thank you"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "So, do you give blow Jobs?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yeah, yeah, I really like giving blowjobs. People say, I give really good blowjobs"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Excellent!"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Ok, you do blowjobs, do you like to swallow as well?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Excellent, excellent!"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Now obviously sex with a male talent, that's something you would do?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Sex with a female?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "I've never been with a woman before, but I'd be down for that too."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "How about multiple Males?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Maybe"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Possibly?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "I mean I've never really done this type of work before, so I'd want to gain a little experience first."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "That's understandable"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Multiple females?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes that would be fine."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Have you ever been with someone who's a lot older or younger than you?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "When I was 18, I slept with this older guys must of been in his 40s."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "How was it?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "He knew what he was doing and he made me cum. I'd do it again"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "That's great to hear."
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Should I mention that the older man made me eat his ass while he fucked me from behind?",
+                choices: [
+                    { text: "A) \"Yes, I should share that intimate detail.\"", popup: "Sharing will show him you willing to do the nasty jobs too" },
+                    { text: "B) \"No, I should keep that to myself.\"", popup: "Keeping it yourself, might miss out on a work opportunity." }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "So, you've done some modeling before, right?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yeah, a bit of fashion and commercial work."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "And how did you get into that?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "I started when I was younger, just doing some local gigs. It kind of grew from there."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Now, let's talk about your boundaries. Do you have any?"
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Should I be more direct about my boundaries?",
+                choices: [
+                    { text: "A) \"Yes, I need to set some clear limits.\"", popup: "Good, it's important to know your limits." },
+                    { text: "B) \"No, I should go with the flow and see where it takes me.\"", popup: "Embrace the unknown, you might surprise yourself." }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Not really. I'm open to most things, as long as it's consensual."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Excellent. And what about your fantasies? Any you'd like to explore?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "I've always wanted to try something a bit kinkier, like bondage or impact play."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Oh, really? That's exciting. We might be able to arrange something like that."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Brilliant"
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Is Dover going to make me beg for it?",
+                choices: [
+                    { text: "A) \"I hope so, I love begging.\"", popup: "Begging can be so hot, embrace it." },
+                    { text: "B) \"I'm not sure I can handle that.\"", popup: "Maybe you should practice begging, it might surprise you." }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Do you like to be spanked?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "A little, not too hard but firm enough."
+            },
+            {
+                type: "notification",
+                content: "You secretly want him to spank you and tie you up."
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Being in a strangers room, being tied up and spanked by a stranger, is turning you on?",
+                choices: [
+                    { text: "A) \"Yes, why shouldn't it?\"", popup: "The creamier you get thinking about this, will help with this interview" },
+                    { text: "B) \"Not sure, if it's the thought of that or being a professional one day\"", popup: "Tell him your feeling turned on just at the thought of this interview" }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Have you ever tried anal play before?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "No never, but I think it's something I'd like to try"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "That's great to hear, that pays the most amount of money. If you was paid £5000, you'd be expected to do that. Probably with multiple guys, in the same day. You Ok with that?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "I could learn to be okay with that"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Now, let's talk about your experience with porn. Have you watched much of it?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yeah, I've watched a large amount. I like to see what's out there."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "And what kind of scenes do you enjoy watching?"
+            },
+            {
+                type: "task",
+                content: "Task: Answer this question while subtly touching yourself"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "I see. Well, we might be able to make that a reality for you. How does that sound?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "That sounds amazing. I'm definitely up for it."
+            },
+            {
+                type: "question",
+                content: "Question to yourself: I'm going to be a slut aren't I?",
+                choices: [
+                    { text: "A) \"I already am.\"", popup: "And always will be" },
+                    { text: "B) \"Does it matter?\"", popup: "It does matter. You need to know what your going to be... Own it." }
+                ]
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Great! Now, let's talk about your safe word. Do you have one?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "No, I don't think I've ever needed one before."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Well, it's important to have one, just in case. How about we use 'red' for stop and 'yellow' for slow down?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Okay, that works for me."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "I want you to suck my cock."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "okay..."
+            },
+            {
+                type: "self-thought",
+                content: "Self talk: I really need this, he's cute, and I need to showcase my skills"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "If you want this job, that's how you have to start out in this business"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "You want to become an adult model?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "This is what you have to do."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Okay"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Now come towards me. Come closer."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Get on your knees and take my cock into your mouth."
+            },
+            {
+                type: "task",
+                content: "Task: Moan around his cock! This will impress directors. My boyfriend never taste this good when I suck him!"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "You ever hook up with a guy this quick before?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Once, when I was drunk"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Ha! I love it!"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Now bend over the chair for me."
+            },
+            {
+                type: "task",
+                content: "Task: Stand up. Smile. Bend over the chair and present your holes."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Do you know what's going to happen?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Your going to fuck me?"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Yes"
+            },
+            {
+                type: "question",
+                content: "Question to yourself: Should I ask Dover if he wants to see me beg for his cock?",
+                choices: [
+                    { text: "A) \"Yes, I should ask him if he wants to hear me beg.\"", popup: "Asking can show your eagerness and submission." },
+                    { text: "B) \"No, I should wait for him to ask.\"", popup: "I want him to know I'm eager to please." }
+                ]
+            },
+            {
+                type: "narrative",
+                content: "He fucks you like a porn star. You do your very best to impress your potential new boss. You let him fuck you like a whore and you will be hoping this gets you the job."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Get down on your knees again for me. I want you to open your mouth and stick out your tongue."
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "ok"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "I want you to catch it on your tongue."
+            },
+            {
+                type: "task",
+                content: "Task: Swallow his cum proudly. Make eye contact."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Did you swallow it?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes I did"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "You missed a spot."
+            },
+            {
+                type: "narrative",
+                content: "He wipes some of the cum off your face, to swallow off his fingers. Your a lucky girl."
+            },
+            {
+                type: "self-thought",
+                content: "Self talk: I just let a complete stranger fuck me"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Thank you"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "What's your name?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Candice"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Alright well we're going to call you a different name. I don't want you use your real name."
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "So do you think this type of modelling is for you?"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "Yes"
+            },
+            {
+                type: "dialogue",
+                speaker: "Dover",
+                content: "Ha Perfect! This was great"
+            },
+            {
+                type: "dialogue",
+                speaker: "You",
+                content: "It was!"
+            },
+            {
+                type: "narrative",
+                content: "As you leave the office, you wonder if there was ever really a job... or if this was just an elaborate audition."
+            }
+        ];
+        
+        // DOM elements
+        const contentElement = document.getElementById('content');
+        const choicesContainer = document.getElementById('choices-container');
+        const continueButton = document.getElementById('continue-btn');
+        const backButton = document.getElementById('back-btn');
+        const nextButton = document.getElementById('next-btn');
+        const progressBar = document.getElementById('progress');
+        
+        // Initialize the game
+        function initGame() {
+            gameState.steps = gameSteps;
+            gameState.currentStep = 0;
+            gameState.progress = 0;
+            updateProgressBar();
+            updateNavButtons();
+            renderCurrentStep();
+        }
+        
+        // Render current step
+        function renderCurrentStep() {
+            clearTimeout(gameState.timeoutId);
+            contentElement.innerHTML = '';
+            choicesContainer.innerHTML = '';
+            
+            const step = gameState.steps[gameState.currentStep];
+            
+            if (!step) {
+                // Game finished
+                contentElement.innerHTML = '<div class="message narrative">Congratulations! You completed the audition!</div>';
+                continueButton.style.display = 'none';
+                return;
+            }
+            
+            let messageElement;
+            
+            switch(step.type) {
+                case 'narrative':
+                case 'self-thought':
+                case 'notification':
+                case 'task':
+                    messageElement = createMessageElement(step.type, step.content);
+                    contentElement.appendChild(messageElement);
+                    continueButton.style.display = 'block';
+                    break;
+                    
+                case 'question':
+                    messageElement = createMessageElement(step.type, step.content);
+                    contentElement.appendChild(messageElement);
+                    renderChoices(step.choices);
+                    continueButton.style.display = 'none';
+                    break;
+                    
+                case 'dialogue':
+                    // Show typing indicator before message
+                    showTypingIndicator(step.speaker);
+                    
+                    // Delay before showing the message
+                    gameState.timeoutId = setTimeout(() => {
+                        removeTypingIndicator();
+                        messageElement = createMessageElement(
+                            step.speaker === 'Dover' ? 'dover' : 'her',
+                            step.content,
+                            step.speaker
+                        );
+                        contentElement.appendChild(messageElement);
+                        contentElement.scrollTop = contentElement.scrollHeight;
+                        
+                        // Move to next step after a delay
+                        gameState.timeoutId = setTimeout(() => {
+                            gameState.currentStep++;
+                            gameState.progress = (gameState.currentStep / gameState.steps.length) * 100;
+                            updateProgressBar();
+                            updateNavButtons();
+                            renderCurrentStep();
+                        }, step.speaker === 'Dover' ? 2500 : 1500);
+                    }, step.speaker === 'Dover' ? 1500 : 1000);
+                    break;
+                    
+                case 'email':
+                    messageElement = document.createElement('div');
+                    messageElement.className = 'email';
+                    messageElement.textContent = step.content;
+                    contentElement.appendChild(messageElement);
+                    continueButton.style.display = 'block';
+                    break;
+                    
+                case 'prep':
+                    messageElement = document.createElement('div');
+                    messageElement.className = 'message narrative';
+                    messageElement.innerHTML = '<h3>Preparation Tasks:</h3><div class="prep-list">' + 
+                        step.content.replace(/\n/g, '<br>').replace(/•/g, '<li>') + 
+                        '</div>';
+                    contentElement.appendChild(messageElement);
+                    continueButton.style.display = 'block';
+                    break;
+            }
+            
+            contentElement.scrollTop = contentElement.scrollHeight;
+        }
+        
+        // Show typing indicator
+        function showTypingIndicator(speaker) {
+            const typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typing-indicator';
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            
+            if (speaker === 'Dover') {
+                typingIndicator.style.alignSelf = 'flex-start';
+            } else {
+                typingIndicator.style.alignSelf = 'flex-end';
+            }
+            
+            contentElement.appendChild(typingIndicator);
+            contentElement.scrollTop = contentElement.scrollHeight;
+        }
+        
+        // Remove typing indicator
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+        
+        // Create message element
+        function createMessageElement(type, content, speaker = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            if (speaker) {
+                const speakerSpan = document.createElement('span');
+                speakerSpan.className = 'character';
+                speakerSpan.textContent = `${speaker}:`;
+                messageDiv.appendChild(speakerSpan);
+            }
+            
+            const contentSpan = document.createElement('div');
+            contentSpan.innerHTML = content;
+            messageDiv.appendChild(contentSpan);
+            
+            return messageDiv;
+        }
+        
+        // Render choices for question steps
+        function renderChoices(choices) {
+            choicesContainer.innerHTML = '';
+            
+            choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                button.textContent = choice.text;
+                button.addEventListener('click', () => handleChoice(choice));
+                choicesContainer.appendChild(button);
+            });
+        }
+        
+        // Handle choice selection
+        function handleChoice(choice) {
+            // Show popup message
+            const popupElement = document.createElement('div');
+            popupElement.className = 'popup';
+            popupElement.textContent = choice.popup;
+            contentElement.appendChild(popupElement);
+            contentElement.scrollTop = contentElement.scrollHeight;
+            
+            // Clear choices and show continue button
+            choicesContainer.innerHTML = '';
+            continueButton.style.display = 'block';
+        }
+        
+        // Move to next step
+        function nextStep() {
+            clearTimeout(gameState.timeoutId);
+            gameState.currentStep++;
+            gameState.progress = (gameState.currentStep / gameState.steps.length) * 100;
+            updateProgressBar();
+            updateNavButtons();
+            renderCurrentStep();
+        }
+        
+        // Move to previous step
+        function prevStep() {
+            clearTimeout(gameState.timeoutId);
+            if (gameState.currentStep > 0) {
+                gameState.currentStep--;
+                gameState.progress = (gameState.currentStep / gameState.steps.length) * 100;
+                updateProgressBar();
+                updateNavButtons();
+                renderCurrentStep();
+            }
+        }
+        
+        // Update progress bar
+        function updateProgressBar() {
+            progressBar.style.width = `${gameState.progress}%`;
+        }
+        
+        // Update navigation button states
+        function updateNavButtons() {
+            backButton.disabled = gameState.currentStep === 0;
+            nextButton.disabled = gameState.currentStep >= gameState.steps.length - 1;
+        }
+        
+        // Event listeners
+        continueButton.addEventListener('click', nextStep);
+        backButton.addEventListener('click', prevStep);
+        nextButton.addEventListener('click', nextStep);
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
